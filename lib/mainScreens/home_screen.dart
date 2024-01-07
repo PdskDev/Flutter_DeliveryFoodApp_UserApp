@@ -1,9 +1,14 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:users_app/widgets/info_design.dart';
+import 'package:users_app/widgets/progress_bar.dart';
 import 'package:users_app/widgets/user_drawer.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../authentication/auth_screen.dart';
 import '../global/global.dart';
+import '../models/sellers.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -59,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Padding(
               padding: const EdgeInsets.all(10.0),
               child: Container(
-                height: MediaQuery.of(context).size.height * .3,
+                height: MediaQuery.of(context).size.height * .2,
                 width: MediaQuery.of(context).size.width,
                 child: CarouselSlider (
                   items: imagesSlider.map((index) {
@@ -98,6 +103,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+          ),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+        .collection("sellers").snapshots(),
+            builder: (context, snapshot) {
+              return !snapshot.hasData ?
+              SliverToBoxAdapter(child: Center(child: circularProgress()),)
+                  : SliverStaggeredGrid.countBuilder(
+                crossAxisCount: 1,
+                staggeredTileBuilder: (c) => const StaggeredTile.fit(1),
+                itemBuilder: (context, index) {
+                  Sellers sellersModel = Sellers.fromJson(
+                      snapshot.data!.docs[index].data()! as Map<String, dynamic>
+                  );
+                  //Design info display
+                  return InfoDesignWidget(
+                    model: sellersModel,
+                    context: context,
+                  );
+                },
+                itemCount: snapshot.data!.docs.length,
+              );
+            },
           ),
         ],
       ),
